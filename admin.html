@@ -1,0 +1,125 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#081426">
+<title>Admin · Anaxx Science Hub</title>
+<style>
+:root{--bg:#081426;--panel:#10213a;--cyan:#43e3e8;--text:#f4f8ff;--muted:#b5c4d9;--line:#263b55}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:16px/1.6 system-ui,-apple-system,Segoe UI,sans-serif}
+header{padding:16px 5%;border-bottom:1px solid var(--line);display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}.brand{font-weight:900}.brand span{color:var(--cyan)}a{color:var(--cyan)}
+main{max-width:900px;margin:auto;padding:24px 5% 60px}h1{font-size:clamp(1.8rem,6vw,2.6rem)}.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:18px;margin:16px 0}
+label{display:block;font-weight:700;margin:13px 0 5px}input,textarea,select{display:block;width:100%;padding:12px;border:1px solid #49617d;border-radius:9px;background:#0c1b30;color:white;font:inherit}textarea{min-height:180px;resize:vertical}
+button{font:inherit;border:0;border-radius:9px;padding:11px 14px;background:var(--cyan);color:#061321;font-weight:800;cursor:pointer;margin:8px 7px 0 0}.secondary{background:#263b55;color:white}.danger{background:#a93648;color:white}.muted{color:var(--muted)}.hidden{display:none!important}.row{display:flex;gap:10px;flex-wrap:wrap}.row>*{flex:1}.item{border:1px solid var(--line);border-radius:10px;padding:12px;margin:10px 0}.status{padding:12px;border:1px solid var(--line);border-radius:10px;color:var(--muted);white-space:pre-wrap}.preview{max-width:100%;max-height:260px;border-radius:10px;margin-top:10px}.small{font-size:.9rem}
+</style></head>
+<body>
+<header><div class="brand">ANAXX <span>SCIENCE HUB</span> · ADMIN</div><a href="index.html">View public site ↗</a></header>
+<main><h1>Content dashboard</h1><p class="muted">Sign in to manage articles, upload images and publish when ready.</p><div id="notice" class="status">Checking setup…</div>
+<section id="loginPanel" class="card hidden"><h2>Admin sign in</h2><label for="email">Email</label><input id="email" type="email" autocomplete="username" placeholder="Your admin email"><label for="password">Password</label><input id="password" type="password" autocomplete="current-password" placeholder="Your password"><button id="signIn">Sign in</button><p class="small muted">Admin accounts must be created in Supabase and explicitly approved in the admin_users table. Public visitors cannot create admin accounts here.</p></section>
+<section id="dashboard" class="hidden">
+<div class="card"><h2>Website branding</h2><p class="muted">Upload your logo and profile photo here. These images are public on the website, so choose images you're comfortable sharing.</p>
+<label for="logoFile">Logo image</label><input id="logoFile" type="file" accept="image/png,image/jpeg,image/webp,image/svg+xml">
+<img id="logoPreview" class="preview hidden" alt="Logo preview">
+<label for="profileFile">Your photo</label><input id="profileFile" type="file" accept="image/png,image/jpeg,image/webp">
+<img id="profilePreview" class="preview hidden" alt="Profile photo preview">
+<button id="saveBranding">Save branding</button><div id="brandingNotice" class="status" style="margin-top:12px">Optional: you can add your logo and profile photo now or later.</div></div>
+<div class="card"><div class="row" style="align-items:center"><div><h2 style="margin:0">Your articles</h2><p class="muted" style="margin:3px 0">Drafts are visible only to approved admins.</p></div><button id="newArticle">+ New article</button><button id="signOut" class="secondary">Sign out</button></div><div id="articleList"></div></div>
+<div class="card" id="editor"><h2 id="editorTitle">Create article</h2><input id="articleId" type="hidden">
+<label for="title">Article title *</label><input id="title" maxlength="180" placeholder="e.g. Introduction to the heart">
+<div class="row"><div><label for="course">Course / category</label><input id="course" maxlength="80" placeholder="Anatomy"></div><div><label for="slug">Slug (optional)</label><input id="slug" maxlength="180" placeholder="introduction-to-the-heart"></div></div>
+<label for="summary">Short summary</label><textarea id="summary" style="min-height:80px" maxlength="500" placeholder="A short description shown on the public library"></textarea>
+<label for="content">Article content *</label><textarea id="content" placeholder="Write your explanation here. Plain text and line breaks are supported. Add sources/references at the end."></textarea>
+<label for="imageFile">Cover image (choose from your phone)</label><input id="imageFile" type="file" accept="image/png,image/jpeg,image/webp,image/gif"><p class="small muted">Use images you own or are allowed to republish. Recommended maximum: 5 MB. Uploaded images are stored in a public image bucket, so anyone with the image URL can view them—even if an article is still a draft.</p>
+<img id="imagePreview" class="preview hidden" alt="Selected cover image preview">
+<label for="imageUrl">Cover image URL</label><input id="imageUrl" placeholder="Filled automatically after uploading; you may also paste an image URL">
+<label for="imageAlt">Image description (alt text)</label><input id="imageAlt" maxlength="250" placeholder="Describe what the image shows">
+<div class="row"><button id="saveDraft">Save draft</button><button id="publish">Publish article</button><button id="clear" class="secondary">Clear form</button></div>
+<div id="editorNotice" class="status" style="margin-top:14px">Create a new article or select one to edit.</div></div></div>
+</section>
+</main>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="config.js"></script>
+<script>
+const $=id=>document.getElementById(id);let db=null,user=null,articles=[];
+function ready(){return window.SUPABASE_URL&&window.SUPABASE_PUBLISHABLE_KEY&&!window.SUPABASE_URL.includes('PASTE_')&&!window.SUPABASE_PUBLISHABLE_KEY.includes('PASTE_')}
+function note(text){$('notice').textContent=text}
+function editorNote(text){$('editorNotice').textContent=text}
+function slugify(s){return s.toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,180)}
+function resetForm(){['articleId','title','course','slug','summary','content','imageUrl','imageAlt'].forEach(id=>$(id).value='');$('slug').dataset.manual='';$('imageFile').value='';$('imagePreview').classList.add('hidden');$('editorTitle').textContent='Create article';editorNote('Create a new article or select one to edit.')}
+function fillForm(a){$('articleId').value=a.id;$('title').value=a.title||'';$('course').value=a.course||'';$('slug').value=a.slug||'';$('summary').value=a.summary||'';$('content').value=a.content||'';$('imageUrl').value=a.cover_image_url||'';$('imageAlt').value=a.image_alt||'';$('imageFile').value='';$('editorTitle').textContent='Edit article';if(a.cover_image_url){$('imagePreview').src=a.cover_image_url;$('imagePreview').classList.remove('hidden')}else $('imagePreview').classList.add('hidden');editorNote('Editing: '+a.title+' ('+a.status+').')}
+async function checkAdmin(){
+ const {data,error}=await db.from('admin_users').select('user_id').eq('user_id',user.id).maybeSingle();
+ if(error||!data){await db.auth.signOut();user=null;$('loginPanel').classList.remove('hidden');$('dashboard').classList.add('hidden');note('This account is signed in but is not approved as a site admin. Add its user ID to public.admin_users in Supabase, then sign in again.');return false}
+ $('loginPanel').classList.add('hidden');$('dashboard').classList.remove('hidden');note('Signed in as '+user.email+'. Drafts and editing controls are available to approved admins.');await loadArticles();return true;
+}
+async function loadArticles(){const {data,error}=await db.from('articles').select('*').order('updated_at',{ascending:false});if(error){note('Could not load articles: '+error.message);return}articles=data||[];const list=$('articleList');list.replaceChildren();if(!articles.length){list.textContent='No articles yet. Create your first one below.';return}articles.forEach(a=>{const item=document.createElement('div');item.className='item';const title=document.createElement('strong');title.textContent=a.title;const meta=document.createElement('div');meta.className='muted small';meta.textContent=(a.course||'Uncategorised')+' · '+a.status;const edit=document.createElement('button');edit.textContent='Edit';edit.addEventListener('click',()=>fillForm(a));item.append(title,meta,edit);const del=document.createElement('button');del.textContent='Delete';del.className='danger';del.addEventListener('click',async()=>{if(!confirm('Delete this article? This cannot be undone.'))return;const {error}=await db.from('articles').delete().eq('id',a.id);if(error){note('Delete failed: '+error.message);return}await loadArticles();resetForm();note('Article deleted.')});item.append(del);if(a.status==='published'){const link=document.createElement('a');link.href='index.html';link.textContent=' Public site';link.style.marginLeft='10px';item.append(link)}list.append(item)})}
+async function uploadBrandFile(file, label){
+ if(!file)return null;
+ const allowed=['image/jpeg','image/png','image/webp','image/svg+xml'];
+ if(!allowed.includes(file.type))throw new Error(label+': choose JPG, PNG, WEBP'+(label==='Logo'?' or SVG':'')+'.');
+ if(file.size>5*1024*1024)throw new Error(label+' image is larger than 5 MB.');
+ const safe=file.name.replace(/[^a-zA-Z0-9._-]/g,'-');
+ const path='branding/'+user.id+'/'+label.toLowerCase().replace(/[^a-z]/g,'')+'-'+crypto.randomUUID()+'-'+safe;
+ const {error}=await db.storage.from('article-images').upload(path,file,{contentType:file.type,upsert:false});
+ if(error)throw error;
+ return db.storage.from('article-images').getPublicUrl(path).data.publicUrl;
+}
+async function saveBranding(){
+ try{
+  $('saveBranding').disabled=true;$('brandingNotice').textContent='Uploading and saving branding…';
+  const {data:existing,error:readError}=await db.from('site_settings').select('setting_key,setting_value');
+  if(readError)throw readError;
+  const values=Object.fromEntries((existing||[]).map(x=>[x.setting_key,x.setting_value]));
+  const logo=await uploadBrandFile($('logoFile').files[0],'Logo');
+  const profile=await uploadBrandFile($('profileFile').files[0],'Profile');
+  if(logo)values.site_logo_url=logo;
+  if(profile)values.profile_photo_url=profile;
+  const rows=Object.entries(values).filter(([k])=>['site_logo_url','profile_photo_url'].includes(k)).map(([setting_key,setting_value])=>({setting_key,setting_value,updated_at:new Date().toISOString(),updated_by:user.id}));
+  for(const row of rows){const {error}=await db.from('site_settings').upsert(row,{onConflict:'setting_key'});if(error)throw error}
+  $('brandingNotice').textContent='Branding saved. Refresh the public website to see the changes.';
+  $('logoFile').value='';$('profileFile').value='';
+ }catch(e){$('brandingNotice').textContent='Could not save branding: '+(e.message||String(e))}
+ finally{$('saveBranding').disabled=false}
+}
+$('saveBranding').addEventListener('click',saveBranding);
+$('logoFile').addEventListener('change',()=>{const f=$('logoFile').files[0];if(f){$('logoPreview').src=URL.createObjectURL(f);$('logoPreview').classList.remove('hidden')}});
+$('profileFile').addEventListener('change',()=>{const f=$('profileFile').files[0];if(f){$('profilePreview').src=URL.createObjectURL(f);$('profilePreview').classList.remove('hidden')}});
+async function uploadImage(){
+ const f=$('imageFile').files[0];if(!f)return $('imageUrl').value.trim();
+ if(!['image/jpeg','image/png','image/webp','image/gif'].includes(f.type)){throw new Error('Choose a JPG, PNG, WEBP or GIF image.')}
+ if(f.size>5*1024*1024){throw new Error('Image is larger than 5 MB. Please resize it first.')}
+ const safe=f.name.replace(/[^a-zA-Z0-9._-]/g,'-');const path=user.id+'/'+crypto.randomUUID()+'-'+safe;
+ const {error}=await db.storage.from('article-images').upload(path,f,{contentType:f.type,upsert:false});
+ if(error)throw error;
+ const {data}=db.storage.from('article-images').getPublicUrl(path);$('imageUrl').value=data.publicUrl;return data.publicUrl;
+}
+async function save(status){
+ try{
+  const title=$('title').value.trim(),content=$('content').value.trim();
+  if(!title||!content){editorNote('Please enter an article title and content.');return}
+  $('saveDraft').disabled=$('publish').disabled=true;editorNote('Saving… uploading image if selected.');
+  const image=await uploadImage();const existing=articles.find(a=>a.id===$('articleId').value);
+  const row={title,slug:slugify($('slug').value.trim()||title),course:$('course').value.trim(),summary:$('summary').value.trim(),content,cover_image_url:image||null,image_alt:$('imageAlt').value.trim(),status,updated_at:new Date().toISOString(),author_id:user.id};
+  if(status==='published')row.published_at=existing&&existing.published_at||new Date().toISOString();
+  else row.published_at=null;
+  let result;
+  if($('articleId').value){result=await db.from('articles').update(row).eq('id',$('articleId').value).select().single()}
+  else{result=await db.from('articles').insert(row).select().single()}
+  if(result.error)throw result.error;
+  editorNote(status==='published'?'Published! The article should now appear on the public site.':'Draft saved. Visitors cannot see this article.');
+  resetForm();await loadArticles();
+ }catch(e){editorNote('Could not save: '+(e.message||String(e)))}finally{$('saveDraft').disabled=$('publish').disabled=false}
+}
+$('signIn').addEventListener('click',async()=>{note('Signing in…');const {data,error}=await db.auth.signInWithPassword({email:$('email').value.trim(),password:$('password').value});if(error){note('Sign-in failed: '+error.message);return}user=data.user;await checkAdmin()});
+$('signOut').addEventListener('click',async()=>{await db.auth.signOut();user=null;$('dashboard').classList.add('hidden');$('loginPanel').classList.remove('hidden');note('Signed out.')});
+$('newArticle').addEventListener('click',()=>{resetForm();$('editor').scrollIntoView({behavior:'smooth'})});
+$('clear').addEventListener('click',resetForm);
+$('saveDraft').addEventListener('click',()=>save('draft'));$('publish').addEventListener('click',()=>save('published'));
+$('title').addEventListener('input',()=>{if(!$('slug').dataset.manual)$('slug').value=slugify($('title').value)});
+$('slug').addEventListener('input',()=>{$('slug').dataset.manual='yes'});
+$('imageFile').addEventListener('change',()=>{const f=$('imageFile').files[0];if(!f)return;const url=URL.createObjectURL(f);$('imagePreview').src=url;$('imagePreview').classList.remove('hidden')});
+(async()=>{
+ if(!ready()){note('Setup needed: create a Supabase project, run setup.sql, create your admin account, then fill in config.js with your project URL and publishable key.');$('loginPanel').classList.remove('hidden');return}
+ db=window.supabase.createClient(window.SUPABASE_URL,window.SUPABASE_PUBLISHABLE_KEY);
+ const {data}=await db.auth.getSession();if(data.session){user=data.session.user;await checkAdmin()}else{$('loginPanel').classList.remove('hidden');note('Sign in with your approved admin account.')}
+ db.auth.onAuthStateChange(async(_event,session)=>{if(session&&db){user=session.user;setTimeout(()=>checkAdmin(),0)}});
+})();
+</script></body></html>

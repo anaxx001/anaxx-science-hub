@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#081426">
+<title>Anaxx Science Hub</title>
+<style>
+:root{--bg:#081426;--panel:#10213a;--cyan:#43e3e8;--text:#f4f8ff;--muted:#b5c4d9;--line:#263b55}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:16px/1.65 system-ui,-apple-system,Segoe UI,sans-serif}
+header{padding:16px 5%;display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;border-bottom:1px solid var(--line)}
+.brand{font-weight:900;letter-spacing:.02em;display:flex;align-items:center;gap:10px}.brand span{color:var(--cyan)}.brand-logo{width:40px;height:40px;object-fit:contain;border-radius:10px;background:#10213a;border:1px solid var(--line);display:none}.brand-logo.ready{display:block}.brand-mark{width:40px;height:40px;border-radius:10px;background:#10213a;border:1px solid var(--line);display:flex;align-items:center;justify-content:center;color:var(--cyan);font-weight:900;font-size:1.25rem}.brand-mark.hidden{display:none!important}nav{display:flex;gap:14px;flex-wrap:wrap}a{color:var(--cyan)}nav a{text-decoration:none}
+main{max-width:1050px;margin:auto;padding:24px 5% 60px}.hero{padding:28px 0}.eyebrow{color:var(--cyan);font-weight:800;text-transform:uppercase;letter-spacing:.12em;font-size:.8rem}
+h1{font-size:clamp(2.1rem,7vw,3.7rem);line-height:1.1;margin:.5rem 0 1rem}h2{margin-top:0}p{color:var(--muted)}.btn{display:inline-block;background:var(--cyan);color:#061321;text-decoration:none;font-weight:800;padding:10px 15px;border:0;border-radius:10px;cursor:pointer}
+input{width:100%;padding:13px;border:1px solid #49617d;border-radius:10px;background:#0c1b30;color:white;margin:10px 0 18px}
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:15px}.about-layout{display:grid;grid-template-columns:minmax(110px,180px) 1fr;gap:20px;align-items:start}.profile-photo{width:100%;aspect-ratio:1;object-fit:cover;border-radius:18px;border:1px solid var(--line);background:#0b192b;display:none}.profile-photo.ready{display:block}.profile-placeholder{width:100%;aspect-ratio:1;border-radius:18px;border:1px dashed #49617d;background:#0b192b;display:flex;align-items:center;justify-content:center;color:var(--cyan);font-size:2rem;font-weight:900}.profile-placeholder.hidden{display:none!important}@media(max-width:520px){.about-layout{grid-template-columns:1fr}.profile-photo,.profile-placeholder{max-width:170px}}.card{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:17px;min-width:0}.card h3{margin:.3rem 0}.muted{color:var(--muted)}.tag{font-size:.78rem;color:var(--cyan);font-weight:800;text-transform:uppercase}.cover{width:100%;aspect-ratio:16/9;object-fit:cover;border-radius:10px;background:#0b192b}.bodytext{white-space:pre-wrap;overflow-wrap:anywhere;color:#e4edf9}.hidden{display:none!important}.status{padding:12px;border:1px solid var(--line);border-radius:10px;color:var(--muted)}
+section{margin-top:30px}footer{border-top:1px solid var(--line);padding:24px 5%;text-align:center;color:var(--muted)}button{font:inherit}
+</style>
+</head>
+<body>
+<header><div class="brand"><img id="siteLogo" class="brand-logo" alt="Anaxx Science Hub logo"><div id="brandMark" class="brand-mark">A</div><div>ANAXX <span>SCIENCE HUB</span></div></div><nav><a href="#library">Library</a><a href="#quick-quiz">Quiz</a><a href="#visual-lab">3D Lab</a><a href="#about">About</a><a href="admin.html">Admin sign in</a></nav></header>
+<main>
+<section class="hero"><div class="eyebrow">Student-led science learning</div><h1>Learn it. Understand it.<br><span style="color:var(--cyan)">Share it.</span></h1>
+<p>A growing learning space for anatomy, radiography and health sciences. Learn alongside fellow students through clear explanations, images and self-tests.</p><a class="btn" href="#library">Explore the library</a></section>
+<section id="library"><h2>Learning library</h2><p>Browse published articles. Use the search to find a topic.</p>
+<input id="search" type="search" placeholder="Search articles, courses or topics…" aria-label="Search published articles">
+<div id="message" class="status">Connecting to the learning library…</div><div id="articles" class="grid"></div>
+</section>
+<section id="quick-quiz" class="card"><h2>Quick knowledge check</h2><p><strong>Which chamber pumps blood into the aorta?</strong></p>
+<label><input type="radio" name="quiz-answer" value="a" style="width:auto;margin:0 8px 0 0">Right atrium</label><br>
+<label><input type="radio" name="quiz-answer" value="b" style="width:auto;margin:0 8px 0 0">Right ventricle</label><br>
+<label><input type="radio" name="quiz-answer" value="c" style="width:auto;margin:0 8px 0 0">Left ventricle</label><br><br>
+<button class="btn" id="checkQuiz">Check answer</button><p id="quizFeedback" aria-live="polite"></p></section>
+<section class="card" id="visual-lab"><h2>3D anatomy lab</h2><p>Add properly licensed interactive anatomy models here as the library grows.</p><a href="https://sketchfab.com/" target="_blank" rel="noopener noreferrer">Explore embeddable 3D models on Sketchfab ↗</a></section>
+<section class="card" id="videos"><h2>Video learning</h2><p>Your future YouTube lessons can be added here. Start with a trusted educational video and check its accuracy before recommending it.</p><a href="https://www.youtube.com/" target="_blank" rel="noopener noreferrer">Browse YouTube ↗</a></section>
+<section id="about" class="card"><h2>Meet the student behind the hub</h2><div class="about-layout"><div><img id="profilePhoto" class="profile-photo" alt="Photo of Anaxx"><div id="profilePlaceholder" class="profile-placeholder">A</div></div><div><h3>Hi, I'm Anaxx 👋</h3><p>I'm a radiography student building this hub as I learn. My aim is to research topics carefully, explain concepts in my own words and share useful resources with fellow students.</p><p class="muted">Educational notes are for learning and should be checked against reliable references and your course materials.</p></div></div></section>
+</main><footer>© <span id="year"></span> Anaxx Science Hub · A student-led learning project</footer>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script><script src="config.js"></script>
+<script>
+document.getElementById('year').textContent=new Date().getFullYear();
+const msg=document.getElementById('message'), grid=document.getElementById('articles'), search=document.getElementById('search');
+let allArticles=[];
+function configReady(){return window.SUPABASE_URL&&window.SUPABASE_PUBLISHABLE_KEY&&!window.SUPABASE_URL.includes('PASTE_')&&!window.SUPABASE_PUBLISHABLE_KEY.includes('PASTE_')}
+function render(){
+ const q=search.value.trim().toLowerCase();grid.replaceChildren();
+ const rows=allArticles.filter(a=>[a.title,a.course,a.summary,a.content].join(' ').toLowerCase().includes(q));
+ if(!rows.length){msg.classList.remove('hidden');msg.textContent=allArticles.length?'No matching articles. Try another search.':'No published articles yet. Check back soon.';return}
+ msg.classList.add('hidden');
+ rows.forEach(a=>{
+  const card=document.createElement('article');card.className='card';
+  if(a.cover_image_url){const img=document.createElement('img');img.className='cover';img.src=a.cover_image_url;img.alt=a.image_alt||a.title;img.loading='lazy';card.append(img)}
+  const tag=document.createElement('div');tag.className='tag';tag.textContent=a.course||'Study note';card.append(tag);
+  const title=document.createElement('h3');title.textContent=a.title;card.append(title);
+  const summary=document.createElement('p');summary.textContent=a.summary||'';card.append(summary);
+  const btn=document.createElement('button');btn.className='btn';btn.textContent='Read article';card.append(btn);
+  const body=document.createElement('div');body.className='bodytext hidden';body.style.marginTop='14px';body.textContent=a.content||'';card.append(body);
+  btn.addEventListener('click',()=>{const closed=body.classList.contains('hidden');body.classList.toggle('hidden');btn.textContent=closed?'Close article':'Read article'});
+  grid.append(card);
+ });
+}
+search.addEventListener('input',render);
+document.getElementById('checkQuiz').addEventListener('click',()=>{
+ const selected=document.querySelector('input[name="quiz-answer"]:checked');
+ const out=document.getElementById('quizFeedback');
+ if(!selected){out.textContent='Choose an answer first.';return}
+ out.textContent=selected.value==='c'?'Correct! The left ventricle pumps blood into the aorta.':'Not quite. Review the pathway of blood through the heart and try again.';
+});
+(async()=>{
+ if(!configReady()){msg.textContent='Setup needed: add your Supabase project URL and publishable key in config.js, then refresh.';return}
+ const client=window.supabase.createClient(window.SUPABASE_URL,window.SUPABASE_PUBLISHABLE_KEY);
+ const settingsResult=await client.from('site_settings').select('setting_key,setting_value');
+ if(!settingsResult.error){
+  const settings=Object.fromEntries((settingsResult.data||[]).map(x=>[x.setting_key,x.setting_value]));
+  if(settings.site_logo_url){const logo=document.getElementById('siteLogo');logo.src=settings.site_logo_url;logo.classList.add('ready');document.getElementById('brandMark').classList.add('hidden')}
+  if(settings.profile_photo_url){const photo=document.getElementById('profilePhoto');photo.src=settings.profile_photo_url;photo.classList.add('ready');document.getElementById('profilePlaceholder').classList.add('hidden')}
+ }
+ const {data,error}=await client.from('articles').select('id,title,course,summary,content,cover_image_url,image_alt,published_at').eq('status','published').order('published_at',{ascending:false});
+ if(error){msg.textContent='Could not load articles yet. Check the Supabase setup, table policies and project settings.';return}
+ allArticles=data||[];render();
+})();
+</script></body></html>
